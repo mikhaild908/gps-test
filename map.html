@@ -20,11 +20,36 @@
   </head>
   <body>
     <div id="map"></div>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         var map = L.map('map').setView([33.5467, -112.0456], 10);
 
         var layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
         map.addLayer(layer);
+
+        var socket = io();
+        var state = {lat: 0, lng: 0};
+        var alpha = 0.4;
+
+        var marker = L.marker([33.5467, -112.0456]).addTo(map).bindPopup("I am here.");
+
+        socket.on('position', function(pos) {
+            
+            if (pos.lat === null || pos.lon === null) {
+                return;
+            }
+
+            if (state.lat === 0 && state.lng === 0) {
+                state.lat = pos.lat;
+                state.lng = pos.lon;
+            } else {
+                state.lat = (1 - alpha) * state.lat + alpha * pos.lat;
+                state.lng = (1 - alpha) * state.lng + alpha * pos.lon;
+            }
+
+            var newLatLng = new L.LatLng(state.lat, state.lng);
+            marker.setLatLng(newLatLng); 
+        });
 
     </script>
   </body>
